@@ -100,6 +100,70 @@ class ScanManager:
             results_json=results_data,
         )
 
+        # Phase 3: unified detection result (risk + confidence + evidence)
+        from backend.app.detection.detection_orchestrator import run_detection
+
+        detection = await run_detection(aggregated, dict(aggregated.statuses))
+        results_data["detection"] = detection.to_dict()
+
+        # Phase 3: persist threat indicators / matches / evidence / detection
+        from backend.app.models.threat import (
+            DetectionResult as DetectionRow,
+        )
+        from backend.app.models.threat import (
+            IntelligenceMatch,
+            ScanEvidence,
+            ThreatIndicator,
+        )
+
+        indicator_cache: dict[tuple[str, str], ThreatIndicator] = {}
+        for m in detection.intelligence_matches:
+            if not m.get("matched"):
+                continue
+            ind = ThreatIndicator(
+                indicator_type=m.get("indicator_type", "url"),
+                indicator_value=m.get("indicator_value", "")[:2048],
+                source=m.get("provider", "unknown"),
+                threat_category=m.get("threat_category"),
+                verification_status=str(m.get("verification_status", "unknown")),
+                last_seen=m.get("last_observed"),
+            )
+            db.add(ind)
+            db.flush()
+            indicator_cache[(m.get("provider", ""), m.get("indicator_value", ""))] = ind
+            db.add(
+                IntelligenceMatch(
+                    scan_id=scan_id,
+                    indicator_id=ind.id,
+                    provider=m.get("provider", "unknown"),
+                    match_type=str(m.get("match_type", "none")),
+                    verification_status=str(m.get("verification_status", "unknown")),
+                )
+            )
+        for e in detection.evidence.items:
+            db.add(
+                ScanEvidence(
+                    scan_id=scan_id,
+                    evidence_id=e.id,
+                    category=e.category.value,
+                    description=e.description[:2048],
+                    severity=e.severity.value,
+                    source=e.source,
+                    confidence=e.confidence,
+                )
+            )
+        db.add(
+            DetectionRow(
+                scan_id=scan_id,
+                risk_score=detection.risk.risk_score,
+                risk_level=detection.risk.risk_level.value,
+                classification=detection.risk.classification.value,
+                confidence_score=detection.confidence.confidence_score,
+                explanation=detection.explanation[:4096],
+            )
+        )
+        db.commit()
+
         # Step 9: Build and return ScanResponse contract
         from backend.app.detection.risk_scoring import calculate_security_posture as _posture
 

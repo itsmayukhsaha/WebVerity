@@ -40,6 +40,12 @@ class Settings(BaseSettings):
     URLHAUS_AUTH_KEY: str | None = None
     PHISHTANK_API_KEY: str | None = None
 
+    # Phase 3 — threat intelligence subsystem configuration
+    THREAT_INTELLIGENCE_TIMEOUT: float = 8.0
+    THREAT_INTELLIGENCE_CACHE_TTL: int = 900
+    ENABLE_URLHAUS: bool = True
+    ENABLE_PHISHTANK: bool = True
+
     # Phase 2 — safe HTTP fetch limits
     HTTP_FETCH_TIMEOUT: float = 10.0
     MAX_REDIRECTS: int = 5

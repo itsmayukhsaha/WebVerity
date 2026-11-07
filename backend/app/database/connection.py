@@ -9,6 +9,13 @@ from collections.abc import Generator
 from backend.app.core.config import settings
 from backend.app.core.logging import logger
 from backend.app.models.scan import Base
+from backend.app.models.threat import (  # noqa: F401  (registers tables with Base.metadata)
+    DetectionResult,
+    IntelligenceMatch,
+    ScanEvidence,
+    ThreatIndicator,
+    ThreatSource,
+)
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 

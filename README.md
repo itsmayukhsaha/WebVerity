@@ -169,6 +169,34 @@ ruff format --check .
 
 ---
 
+## Phase 3 — Threat Intelligence Integration, Evidence Correlation & Intelligent Risk Detection
+
+Phase 3 layers an explainable detection engine on top of the Phase 2 pipeline:
+
+- **Threat-intelligence subsystem** (`backend/app/intelligence/`): URLhaus and PhishTank adapters behind a common contract, normalized indicator/match models (`models.py`), explainable matching (`indicator_matcher.py`), a TTL result cache (`cache.py`), and a fan-out manager with per-provider failure isolation (`intelligence_manager.py`). Providers are configured via `URLHAUS_AUTH_KEY`, `PHISHTANK_API_KEY`, `ENABLE_URLHAUS`, `ENABLE_PHISHTANK`, `THREAT_INTELLIGENCE_TIMEOUT`, `THREAT_INTELLIGENCE_CACHE_TTL`. Missing keys mean honest UNAVAILABLE states — never fabricated clean results.
+- **Indicator matching:** exact/canonical URL, exact domain and explicit subdomain matching with case/IDNA/port/percent-encoding normalization; substring spoofing (`example.com.evil.test`) cannot match.
+- **Evidence correlation** (`detection/evidence_correlator.py`): deduplicated evidence in five buckets (malicious / suspicious / security weakness / neutral / unavailable). Missing headers are weaknesses, not phishing proof; failed modules are UNAVAILABLE, never negative evidence.
+- **Risk engine** (`detection/risk_engine.py`): deterministic, configurable, weighted 0–100 score with breakdown and reasons. Provider-confirmed matches force CRITICAL precedence; insufficient evidence caps escalation.
+- **Confidence engine** (`detection/confidence_engine.py`): independent of risk; failed essential checks cap confidence even with verified intelligence.
+- **Detection orchestrator** (`detection/detection_orchestrator.py`): single unified detection result, persisted per scan.
+
+### Phase 3 API Endpoints
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/v1/intelligence/check` | Passive TI lookup of a URL/domain across enabled providers |
+| GET | `/api/v1/intelligence/status` | Provider configuration/availability (no credentials returned) |
+| GET | `/api/v1/scans/{id}/detection` | Unified detection result (risk, confidence, breakdown, evidence) |
+| GET | `/api/v1/scans/{id}/evidence` | Deduplicated correlated evidence |
+| GET | `/api/v1/scans/{id}/intelligence` | Normalized intelligence matches for the scan |
+
+### Phase 3 Database entities
+`threat_sources`, `threat_indicators`, `intelligence_matches`, `scan_evidence`, `detection_results` — see `docs/PHASE_3_ARCHITECTURE.md`.
+
+### Phase 3 tests
+`pytest tests/test_phase3_detection.py` — mocked, offline tests covering matching, provider responses, timeouts, rate limits, dedup, scoring precedence, confidence and API behaviour. Full suite: **139 tests**.
+
+---
+
 ## Disclosures
 - **Third-Party Dependencies:** All external libraries (`fastapi`, `uvicorn`, `pydantic`, `cryptography`, `dnspython`, `sqlalchemy`, `httpx`, `beautifulsoup4`, `lxml`, `pytest`, `ruff`) are free and open-source software under permissive licenses (MIT, Apache-2.0, BSD).
 - **Threat Intelligence:** URLhaus (abuse.ch) data is used per its public API terms; queries are redacted (no query strings sent). PhishTank requires an application key and is disabled without one. No fabricated intelligence is ever produced — unavailable sources return honest UNAVAILABLE/SKIPPED states.
