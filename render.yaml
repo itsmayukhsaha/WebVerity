@@ -1,0 +1,41 @@
+# Render Blueprint — WebVerity backend
+#
+# Two deployment options:
+#
+# 1. Docker service (below): container image with a persistent disk at /data
+#    holding the SQLite database. Requires a paid plan (persistent disks are
+#    not available on Render free services).
+# 2. Free-tier alternative: change runtime to "python", set
+#    rootDir: backend, buildCommand: "pip install -r requirements.txt",
+#    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT",
+#    remove the disk block, and set DATABASE_URL to a Render PostgreSQL
+#    instance so data survives redeploys (free services have ephemeral disks).
+
+services:
+  - type: web
+    name: webverity-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    plan: starter # change to "free" only if you also switch to the python runtime + Postgres
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: CORS_ORIGINS
+        # JSON list — add your deployed frontend origin(s) here
+        value: '["http://localhost:3000","http://localhost:8000"]'
+      # Threat-intelligence credentials (set these as secrets in the Render
+      # dashboard, not in this file):
+      #   URLHAUS_AUTH_KEY, PHISHTANK_API_KEY
+      # Database: leave unset on a persistent-disk plan (defaults to SQLite on
+      # /data). For a Postgres plan, set DATABASE_URL to the Render Postgres
+      # internal connection string.
+    disk:
+      name: webverity-data
+      mountPath: /data
+      sizeGB: 1

@@ -56,7 +56,7 @@ def _stub_dns_tls():
     return dns_patch, tls_patch
 
 
-@pytest.mark.integration
+@pytest.mark.live_pipeline
 def test_full_pipeline_phase2_modules_present(client: TestClient):
     dns_patch, tls_patch = _stub_dns_tls()
     with dns_patch, tls_patch:
@@ -88,7 +88,7 @@ def test_full_pipeline_phase2_modules_present(client: TestClient):
     assert data["recommendations"]
 
 
-@pytest.mark.integration
+@pytest.mark.live_pipeline
 def test_phase2_detail_endpoints(client: TestClient):
     dns_patch, tls_patch = _stub_dns_tls()
     with dns_patch, tls_patch:
@@ -109,7 +109,7 @@ def test_phase2_detail_endpoints(client: TestClient):
     assert "recommendations" in recs.json()
 
 
-@pytest.mark.integration
+@pytest.mark.live_pipeline
 def test_scan_response_contract_preserved(client: TestClient):
     """Phase 1 consumers: scan_id/status/target/threat_assessment/modules/findings exist."""
     dns_patch, tls_patch = _stub_dns_tls()

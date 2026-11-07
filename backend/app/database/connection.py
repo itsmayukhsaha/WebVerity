@@ -19,16 +19,24 @@ from backend.app.models.threat import (  # noqa: F401  (registers tables with Ba
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
-# Configure engine with thread safety for SQLite
+# Normalize legacy Postgres URLs (Render/Railway sometimes emit postgres://).
+_DATABASE_URL = settings.DATABASE_URL
+if _DATABASE_URL.startswith("postgres://"):
+    _DATABASE_URL = _DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+# Configure engine with thread safety for SQLite and pooled connections for Postgres
 connect_args = {}
-if settings.DATABASE_URL.startswith("sqlite"):
+engine_kwargs: dict = {"echo": False, "future": True}
+if _DATABASE_URL.startswith("sqlite"):
     connect_args = {"check_same_thread": False}
+else:
+    engine_kwargs["pool_pre_ping"] = True
+    engine_kwargs["pool_recycle"] = 280  # stay under Render/Railway connection idle limits
 
 engine = create_engine(
-    settings.DATABASE_URL,
+    _DATABASE_URL,
     connect_args=connect_args,
-    echo=False,
-    future=True,
+    **engine_kwargs,
 )
 
 SessionLocal = sessionmaker(

@@ -58,4 +58,5 @@ python_functions = ["test_*"]
 pythonpath = ["..", "."]
 markers = [
   "integration: tests that touch live public services (example.com, IANA, abuse.ch)",
+  "live_pipeline: pipeline tests that reach the live network for a real scan",
 ]
