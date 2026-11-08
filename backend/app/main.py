@@ -6,7 +6,7 @@ Intelligent Phishing Detection & Website Trust Assessment Platform.
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from backend.app.api.routes import health, intelligence, scans
+from backend.app.api.routes import community, health, intelligence, scans
 from backend.app.core.config import settings
 from backend.app.core.logging import logger
 from backend.app.database.connection import init_db
@@ -54,6 +54,7 @@ def create_application() -> FastAPI:
     app.include_router(health.router, prefix="/api/v1")
     app.include_router(scans.router, prefix="/api/v1")
     app.include_router(intelligence.router, prefix="/api/v1")
+    app.include_router(community.router, prefix="/api/v1")
 
     @app.get("/", include_in_schema=False)
     async def root_redirect() -> RedirectResponse:

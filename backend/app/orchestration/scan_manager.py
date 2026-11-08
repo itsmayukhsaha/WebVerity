@@ -86,7 +86,13 @@ class ScanManager:
             },
         }
 
-        # Step 8: Update database record
+        # Phase 3: unified detection result (risk + confidence + evidence)
+        from backend.app.detection.detection_orchestrator import run_detection
+
+        detection = await run_detection(aggregated, dict(aggregated.statuses))
+        results_data["detection"] = detection.to_dict()
+
+        # Step 8: Update database record (after detection so it is persisted)
         from backend.app.detection.risk_scoring import calculate_security_posture
 
         ResultService.save_scan_result(
@@ -99,12 +105,6 @@ class ScanManager:
             security_posture_score=calculate_security_posture(aggregated.findings),
             results_json=results_data,
         )
-
-        # Phase 3: unified detection result (risk + confidence + evidence)
-        from backend.app.detection.detection_orchestrator import run_detection
-
-        detection = await run_detection(aggregated, dict(aggregated.statuses))
-        results_data["detection"] = detection.to_dict()
 
         # Phase 3: persist threat indicators / matches / evidence / detection
         from backend.app.models.threat import (

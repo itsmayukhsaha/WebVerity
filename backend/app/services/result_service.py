@@ -68,3 +68,31 @@ class ResultService:
     def get_scan_by_id(db: Session, scan_id: str) -> Scan | None:
         """Retrieve a stored scan by its UUID."""
         return db.query(Scan).filter(Scan.id == scan_id).first()
+
+    @staticmethod
+    def list_scans(
+        db: Session,
+        search: str | None = None,
+        risk_level: str | None = None,
+        status_filter: str | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> tuple[list[Scan], int]:
+        """List completed scan records with optional search and filters.
+
+        Returns (scans, total_matching) ordered by newest first.
+        """
+        query = db.query(Scan)
+        if search:
+            like = f"%{search}%"
+            query = query.filter(
+                (Scan.domain.ilike(like)) | (Scan.submitted_url_redacted.ilike(like))
+            )
+        if risk_level:
+            query = query.filter(Scan.risk_level == risk_level.upper())
+        if status_filter:
+            query = query.filter(Scan.status == status_filter.upper())
+
+        total = query.count()
+        scans = query.order_by(Scan.created_at.desc()).offset(offset).limit(limit).all()
+        return scans, total

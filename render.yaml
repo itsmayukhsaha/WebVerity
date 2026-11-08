@@ -39,3 +39,18 @@ services:
       name: webverity-data
       mountPath: /data
       sizeGB: 1
+  # Frontend (Next.js) — set NEXT_PUBLIC_API_URL to the backend's public URL.
+  # Example: https://webverity-backend.onrender.com
+  - type: web
+    name: webverity-frontend
+    runtime: docker
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
+    plan: starter
+    healthCheckPath: /
+    buildFilter:
+      paths:
+        - frontend/**
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        sync: false # set to your deployed backend URL in the Render dashboard

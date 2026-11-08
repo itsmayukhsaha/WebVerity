@@ -1,5 +1,6 @@
 # WebVerity
 > **Intelligent Phishing Detection & Website Trust Assessment.**
+> **Now with a full Next.js frontend (`frontend/`).**
 
 WebVerity is an accessible, multi-layered cybersecurity platform that detects phishing infrastructure and evaluates website trustworthiness through deterministic feature extraction, DNS configuration analysis, cryptographic TLS certificate validation, HTTP security-header assessment, redirect-chain inspection, passive HTML content analysis, RDAP domain registration intelligence, external threat-intelligence feeds, and explainable rule-based risk scoring.
 
@@ -194,6 +195,63 @@ Phase 3 layers an explainable detection engine on top of the Phase 2 pipeline:
 
 ### Phase 3 tests
 `pytest tests/test_phase3_detection.py` — mocked, offline tests covering matching, provider responses, timeouts, rate limits, dedup, scoring precedence, confidence and API behaviour. Full suite: **139 tests**.
+
+---
+
+## Phase 4 — Frontend (Next.js)
+
+The `frontend/` directory contains a complete Next.js 16 + React 19 + TypeScript + Tailwind CSS 4 App Router interface:
+
+| Route | Feature |
+|-------|---------|
+| `/` | Professional landing page (design system, pipeline overview) |
+| `/dashboard` | Security dashboard — real persisted counts, intel provider health, recent scans |
+| `/scan` | Website URL scanner with live pipeline progress |
+| `/scan/[scanId]` | Detailed report: overview, evidence, modules, findings, intelligence, recommendations |
+| `/history` | Scan history with search, risk/status filters, pagination (GET `/api/v1/scans`) |
+| `/intelligence` | Threat-intelligence center: provider status + passive URL lookup (POST `/api/v1/intelligence/check`) |
+| `/analytics` | Recharts visual reports computed from real scan records |
+| `/settings` | Backend connection diagnostics (health check) and data/privacy notes |
+| `/about` | Architecture, scoring model, disclosures |
+
+### Frontend setup
+
+```bash
+cd frontend
+npm install
+copy .env.local.example .env.local   # defaults to NEXT_PUBLIC_API_URL=http://127.0.0.1:8001
+npm run dev                          # http://localhost:3000
+```
+
+> **Windows port note:** if port 8000 fails with `WinError 10013` (port reserved by
+> Windows), start the backend on 8001 instead:
+> `uvicorn backend.app.main:app --host 127.0.0.1 --port 8001 --reload`
+> The frontend default `NEXT_PUBLIC_API_URL` already points at 8001.
+
+Fonts are intentionally **not** loaded from Google Fonts (this breaks offline/proxied
+builds with `Can't resolve '@vercel/turbopack-next/internal/font/google/font'`);
+the design uses a self-contained system-font stack in `globals.css`.
+
+### Frontend quality gates
+
+```bash
+npm run build   # Next.js production build (TypeScript checked)
+npm run lint    # ESLint (zero errors)
+```
+
+All statistics shown in the UI come from persisted backend records — nothing is fabricated. Threat-intelligence states (configured/unavailable) are surfaced honestly; credentials are never exposed.
+
+### Deployment (Render Blueprint)
+
+`render.yaml` defines two services:
+- `webverity-backend` — Docker image with a persistent disk at `/data` for the SQLite database.
+- `webverity-frontend` — Dockerized Next.js; set `NEXT_PUBLIC_API_URL` to the backend's public URL in the Render dashboard (also update backend `CORS_ORIGINS` with the frontend origin).
+
+### Added backend endpoint (Phase 4)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/v1/scans` | Scan history list with `search`, `risk_level`, `status`, `limit`, `offset` |
 
 ---
 

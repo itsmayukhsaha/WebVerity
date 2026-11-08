@@ -1,0 +1,162 @@
+@import "tailwindcss";
+
+@theme {
+  --color-navy-950: #050b18;
+  --color-navy-900: #0a1224;
+  --color-navy-800: #101b33;
+  --color-navy-700: #182544;
+  --color-navy-600: #223257;
+  --color-accent-cyan: #22d3ee;
+  --color-accent-blue: #3b82f6;
+  --color-accent-violet: #8b5cf6;
+  --color-risk-low: #34d399;
+  --color-risk-moderate: #fbbf24;
+  --color-risk-high: #fb923c;
+  --color-risk-critical: #f43f5e;
+
+  /* Self-contained font stacks — no remote Google Fonts download needed for
+     local startup. Segoe UI Variable / Inter / system-ui closely match the
+     geometric style of Geist. Monospace stack for code/URL displays. */
+  --font-sans: "Segoe UI Variable Display", "Segoe UI", Inter, ui-sans-serif, system-ui,
+    -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Cascadia Code", "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas,
+    "Liberation Mono", Menlo, monospace;
+}
+
+:root {
+  --background: #050b18;
+  --foreground: #e2e8f0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Subtle radial glow used on hero / dashboard headers */
+.glow-bg {
+  background:
+    radial-gradient(
+      60rem 30rem at 70% -10%,
+      rgba(34, 211, 238, 0.08),
+      transparent 60%
+    ),
+    radial-gradient(
+      50rem 26rem at 10% 110%,
+      rgba(139, 92, 246, 0.07),
+      transparent 60%
+    ),
+    var(--background);
+}
+
+.card {
+  border-radius: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgba(16, 27, 51, 0.55);
+  backdrop-filter: blur(8px);
+}
+
+.card-hover {
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.card-hover:hover {
+  border-color: rgba(34, 211, 238, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(2, 8, 20, 0.5);
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.75rem;
+  background-image: linear-gradient(90deg, #22d3ee, #3b82f6);
+  padding: 0.65rem 1.4rem;
+  font-weight: 600;
+  color: #04101d;
+  transition:
+    opacity 0.2s ease,
+    transform 0.15s ease;
+}
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  padding: 0.65rem 1.4rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+.btn-secondary:hover {
+  border-color: rgba(34, 211, 238, 0.4);
+  background: rgba(34, 211, 238, 0.06);
+}
+
+.input {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(5, 11, 24, 0.6);
+  padding: 0.65rem 1rem;
+  color: #e2e8f0;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+.input:focus {
+  border-color: rgba(34, 211, 238, 0.6);
+}
+.input::placeholder {
+  color: rgba(148, 163, 184, 0.5);
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-up {
+  animation: fade-up 0.5s ease both;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.animate-pulse-dot {
+  animation: pulse-dot 1.6s ease-in-out infinite;
+}

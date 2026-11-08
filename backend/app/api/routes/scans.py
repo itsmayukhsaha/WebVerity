@@ -99,6 +99,44 @@ def _load_scan_response(scan: Any) -> ScanResponse:
     )
 
 
+@router.get("")
+async def list_scans(
+    search: str | None = None,
+    risk_level: str | None = None,
+    status_filter: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    """List stored scan history with optional search and risk/status filters."""
+    limit = max(1, min(limit, 100))
+    offset = max(0, offset)
+    scans, total = ResultService.list_scans(
+        db=db,
+        search=search,
+        risk_level=risk_level,
+        status_filter=status_filter,
+        limit=limit,
+        offset=offset,
+    )
+    items = [
+        {
+            "scan_id": s.id,
+            "target": s.domain,
+            "url": s.submitted_url_redacted,
+            "status": s.status,
+            "risk_score": s.risk_score,
+            "risk_level": s.risk_level,
+            "confidence": s.confidence,
+            "security_posture_score": s.security_posture_score,
+            "created_at": s.created_at.isoformat(),
+            "completed_at": s.completed_at.isoformat() if s.completed_at else None,
+        }
+        for s in scans
+    ]
+    return {"total": total, "count": len(items), "limit": limit, "offset": offset, "scans": items}
+
+
 @router.get("/{scan_id}", response_model=ScanResponse)
 async def get_scan_by_id(
     scan_id: str,

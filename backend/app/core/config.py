@@ -1,6 +1,6 @@
 """Application configuration management using Pydantic Settings."""
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -52,6 +52,20 @@ class Settings(BaseSettings):
     MAX_RESPONSE_BYTES: int = 2097152
 
     LOG_LEVEL: str = "INFO"
+
+    # Phase 5 — collaborative threat intelligence
+    WEBVERITY_ADMIN_TOKEN: str = ""
+    SUBMISSION_RATE_LIMIT: int = 5  # submissions per identity per hour
+    COMMUNITY_INTEL_TTL_DAYS: int = 90
+
+    @field_validator("DEBUG", mode="before")
+    @classmethod
+    def _coerce_debug(cls, value: object) -> object:
+        """Tolerate ambient machine env vars (e.g. DEBUG=release from CI tooling)
+        that would otherwise crash Pydantic's bool parsing at import time."""
+        if isinstance(value, str):
+            return value.strip().lower() in {"1", "true", "yes", "on"}
+        return value
 
 
 settings = Settings()

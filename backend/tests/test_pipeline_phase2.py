@@ -126,3 +126,19 @@ def test_scan_response_contract_preserved(client: TestClient):
         "created_at",
     ):
         assert legacy_key in data
+
+
+@pytest.mark.live_pipeline
+def test_history_includes_pipeline_scan(client: TestClient):
+    """GET /api/v1/scans reflects scans persisted by the pipeline."""
+    dns_patch, tls_patch = _stub_dns_tls()
+    with dns_patch, tls_patch:
+        created = client.post("/api/v1/scans", json={"url": "https://example.com/"})
+    assert created.status_code == 201
+
+    resp = client.get("/api/v1/scans")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["total"] >= 1
+    targets = [item["target"] for item in body["scans"]]
+    assert "example.com" in targets

@@ -4,6 +4,7 @@ Starts uvicorn from /src so the `backend.app.*` package imports resolve,
 and defaults the SQLite database to a writable data directory in
 containerized environments (WEBVERITY_DATA_DIR, default /data).
 """
+
 import os
 from pathlib import Path
 
